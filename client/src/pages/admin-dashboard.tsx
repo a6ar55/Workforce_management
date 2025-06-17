@@ -129,9 +129,11 @@ export default function AdminDashboard() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Worker Management</CardTitle>
-                <Button>
-                  <UserPlus className="mr-2" size={16} />
-                  Add New Worker
+                <Button asChild>
+                  <a href="/admin/workers">
+                    <UserPlus className="mr-2" size={16} />
+                    Add New Worker
+                  </a>
                 </Button>
               </div>
             </CardHeader>

@@ -7,6 +7,9 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { useAuth } from "@/hooks/use-auth";
 import LoginPage from "@/pages/login";
 import AdminDashboard from "@/pages/admin-dashboard";
+import AdminWorkersPage from "@/pages/admin-workers";
+import AdminJobsPage from "@/pages/admin-jobs";
+import AdminAnalyticsPage from "@/pages/admin-analytics";
 import HRDashboard from "@/pages/hr-dashboard";
 import WorkerDashboard from "@/pages/worker-dashboard";
 import NotFound from "@/pages/not-found";
@@ -27,6 +30,9 @@ function AuthenticatedRouter() {
         return <NotFound />;
       }} />
       <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/workers" component={AdminWorkersPage} />
+      <Route path="/admin/jobs" component={AdminJobsPage} />
+      <Route path="/admin/analytics" component={AdminAnalyticsPage} />
       <Route path="/hr" component={HRDashboard} />
       <Route path="/worker" component={WorkerDashboard} />
       <Route component={NotFound} />

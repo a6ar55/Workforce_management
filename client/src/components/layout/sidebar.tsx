@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface SidebarItem {
@@ -13,27 +14,37 @@ interface SidebarProps {
 
 export function Sidebar({ items }: SidebarProps) {
   return (
-    <aside className="w-64 bg-background border-r border-border h-screen sticky top-0">
-      <nav className="p-4">
-        <ul className="space-y-2">
+    <aside className="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 min-h-[calc(100vh-73px)]">
+      <div className="p-6">
+        <nav className="space-y-2">
           {items.map((item) => (
-            <li key={item.href}>
-              <a
-                href={item.href}
-                className={cn(
-                  "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors",
-                  item.active
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <item.icon size={18} />
+            <Button
+              key={item.href}
+              variant={item.active ? "default" : "ghost"}
+              className={cn(
+                "w-full justify-start",
+                item.active 
+                  ? "bg-primary text-primary-foreground" 
+                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+              )}
+              asChild
+            >
+              <a href={item.href} className="flex items-center space-x-3">
+                <item.icon size={20} />
                 <span>{item.label}</span>
               </a>
-            </li>
+            </Button>
           ))}
-        </ul>
-      </nav>
+        </nav>
+      </div>
+      
+      {/* Additional sidebar content */}
+      <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 mt-auto">
+        <div className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="font-medium mb-1">WorkForce Pro</p>
+          <p className="text-xs">Version 1.0.0</p>
+        </div>
+      </div>
     </aside>
   );
 }

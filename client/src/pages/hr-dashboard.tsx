@@ -16,7 +16,8 @@ import {
   MapPin,
   Plus,
   UserRoundCheck,
-  TrendingUp
+  TrendingUp,
+  Briefcase
 } from "lucide-react";
 
 export default function HRDashboard() {

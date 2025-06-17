@@ -1,24 +1,20 @@
 import { useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
-interface PerformanceChartProps {
-  data?: number[];
-  labels?: string[];
-  type?: 'line' | 'doughnut' | 'pie';
-}
-
-export function PerformanceChart({ 
-  data = [65, 78, 90, 81, 56, 75], 
-  labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-  type = 'line'
-}: PerformanceChartProps) {
+export function PerformanceChart() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<Chart | null>(null);
 
+  const { data: workers } = useQuery({
+    queryKey: ["/api/workers"],
+    select: (data: any) => data || [],
+  });
+
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || !workers) return;
 
     // Destroy existing chart
     if (chartRef.current) {
@@ -28,47 +24,52 @@ export function PerformanceChart({
     const ctx = canvasRef.current.getContext('2d');
     if (!ctx) return;
 
-    const chartConfig: any = {
-      type,
+    // Prepare data for top 5 workers
+    const topWorkers = workers
+      .slice(0, 5)
+      .map((worker: any) => ({
+        name: worker.user?.name?.split(' ')[0] || 'Unknown',
+        rating: parseFloat(worker.rating || '0'),
+        jobs: worker.completedJobs || 0
+      }));
+
+    chartRef.current = new Chart(ctx, {
+      type: 'bar',
       data: {
-        labels,
-        datasets: [{
-          label: 'Performance',
-          data,
-          backgroundColor: type === 'line' 
-            ? 'rgba(16, 185, 129, 0.1)'
-            : [
-                'rgba(59, 130, 246, 0.8)',
-                'rgba(16, 185, 129, 0.8)',
-                'rgba(245, 158, 11, 0.8)',
-                'rgba(239, 68, 68, 0.8)',
-                'rgba(139, 92, 246, 0.8)',
-                'rgba(236, 72, 153, 0.8)',
-              ],
-          borderColor: type === 'line' ? 'rgba(16, 185, 129, 1)' : undefined,
-          borderWidth: type === 'line' ? 2 : 1,
-          fill: type === 'line',
-          tension: type === 'line' ? 0.4 : undefined,
-        }]
+        labels: topWorkers.map(w => w.name),
+        datasets: [
+          {
+            label: 'Rating',
+            data: topWorkers.map(w => w.rating),
+            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+            borderColor: 'rgba(59, 130, 246, 1)',
+            borderWidth: 1,
+            borderRadius: 8,
+            yAxisID: 'y',
+          },
+          {
+            label: 'Jobs Completed',
+            data: topWorkers.map(w => w.jobs),
+            backgroundColor: 'rgba(34, 197, 94, 0.8)',
+            borderColor: 'rgba(34, 197, 94, 1)',
+            borderWidth: 1,
+            borderRadius: 8,
+            yAxisID: 'y1',
+          }
+        ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            display: type !== 'line'
+            position: 'top',
+          },
+          title: {
+            display: false
           }
         },
-        scales: type === 'line' ? {
-          y: {
-            beginAtZero: true,
-            grid: {
-              color: 'rgba(148, 163, 184, 0.3)'
-            },
-            ticks: {
-              color: 'rgba(71, 85, 105, 0.8)'
-            }
-          },
+        scales: {
           x: {
             grid: {
               color: 'rgba(148, 163, 184, 0.3)'
@@ -76,19 +77,49 @@ export function PerformanceChart({
             ticks: {
               color: 'rgba(71, 85, 105, 0.8)'
             }
-          }
-        } : undefined
+          },
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            min: 0,
+            max: 5,
+            grid: {
+              color: 'rgba(148, 163, 184, 0.3)'
+            },
+            ticks: {
+              color: 'rgba(71, 85, 105, 0.8)'
+            },
+            title: {
+              display: true,
+              text: 'Rating (1-5)'
+            }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            grid: {
+              drawOnChartArea: false,
+            },
+            ticks: {
+              color: 'rgba(71, 85, 105, 0.8)'
+            },
+            title: {
+              display: true,
+              text: 'Jobs Completed'
+            }
+          },
+        }
       }
-    };
-
-    chartRef.current = new Chart(ctx, chartConfig);
+    });
 
     return () => {
       if (chartRef.current) {
         chartRef.current.destroy();
       }
     };
-  }, [data, labels, type]);
+  }, [workers]);
 
   return (
     <div className="relative h-64 w-full">
