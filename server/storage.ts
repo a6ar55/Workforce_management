@@ -96,7 +96,10 @@ export class MemStorage implements IStorage {
       customerName: "Mrs. Johnson",
       customerPhone: "(555) 123-4567",
       estimatedDuration: 2,
+      actualDuration: null,
       scheduledAt: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
+      startedAt: null,
+      completedAt: null,
       createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
     };
 
@@ -113,7 +116,10 @@ export class MemStorage implements IStorage {
       customerName: "Mr. Williams",
       customerPhone: "(555) 234-5678",
       estimatedDuration: 4,
+      actualDuration: null,
+      scheduledAt: null,
       startedAt: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
+      completedAt: null,
       createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
     };
 
@@ -125,11 +131,15 @@ export class MemStorage implements IStorage {
       priority: "normal",
       status: "pending",
       location: { address: "789 Business Blvd, Business District", lat: 40.7505, lng: -73.9934 },
+      assignedTo: null,
       createdBy: hrUser.id,
       customerName: "ABC Corporation",
       customerPhone: "(555) 345-6789",
       estimatedDuration: 3,
+      actualDuration: null,
       scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // tomorrow
+      startedAt: null,
+      completedAt: null,
       createdAt: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
     };
 
@@ -158,7 +168,13 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentId++;
-    const user: User = { ...insertUser, id, createdAt: new Date() };
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      email: insertUser.email || null,
+      phone: insertUser.phone || null,
+      createdAt: new Date() 
+    };
     this.users.set(id, user);
     return user;
   }
@@ -178,7 +194,16 @@ export class MemStorage implements IStorage {
 
   async createWorker(insertWorker: InsertWorker): Promise<Worker> {
     const id = this.currentId++;
-    const worker: Worker = { ...insertWorker, id };
+    const worker: Worker = { 
+      ...insertWorker, 
+      id,
+      status: insertWorker.status || 'available',
+      userId: insertWorker.userId || null,
+      location: insertWorker.location || null,
+      completedJobs: insertWorker.completedJobs || 0,
+      rating: insertWorker.rating || "0.00",
+      isActive: insertWorker.isActive !== undefined ? insertWorker.isActive : true
+    };
     this.workers.set(id, worker);
     return worker;
   }
@@ -210,7 +235,23 @@ export class MemStorage implements IStorage {
 
   async createJob(insertJob: InsertJob): Promise<Job> {
     const id = this.currentId++;
-    const job: Job = { ...insertJob, id, createdAt: new Date() };
+    const job: Job = { 
+      ...insertJob, 
+      id, 
+      status: insertJob.status || 'pending',
+      priority: insertJob.priority || 'normal',
+      description: insertJob.description || null,
+      assignedTo: insertJob.assignedTo || null,
+      createdBy: insertJob.createdBy || null,
+      customerName: insertJob.customerName || null,
+      customerPhone: insertJob.customerPhone || null,
+      estimatedDuration: insertJob.estimatedDuration || null,
+      actualDuration: insertJob.actualDuration || null,
+      scheduledAt: insertJob.scheduledAt || null,
+      startedAt: insertJob.startedAt || null,
+      completedAt: insertJob.completedAt || null,
+      createdAt: new Date() 
+    };
     this.jobs.set(id, job);
     return job;
   }
@@ -238,14 +279,24 @@ export class MemStorage implements IStorage {
 
   async createJobReport(insertJobReport: InsertJobReport): Promise<JobReport> {
     const id = this.currentId++;
-    const jobReport: JobReport = { ...insertJobReport, id, submittedAt: new Date() };
+    const jobReport: JobReport = { 
+      ...insertJobReport, 
+      id,
+      workerId: insertJobReport.workerId || null,
+      jobId: insertJobReport.jobId || null,
+      timeSpent: insertJobReport.timeSpent || null,
+      photos: insertJobReport.photos || null,
+      submittedAt: new Date() 
+    };
     this.jobReports.set(id, jobReport);
     return jobReport;
   }
 
   // Activity methods
   async getAllActivities(): Promise<Activity[]> {
-    return Array.from(this.activities.values()).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return Array.from(this.activities.values()).sort((a, b) => 
+      (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0)
+    );
   }
 
   async getRecentActivities(limit: number): Promise<Activity[]> {
@@ -255,7 +306,14 @@ export class MemStorage implements IStorage {
 
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
     const id = this.currentId++;
-    const activity: Activity = { ...insertActivity, id, createdAt: new Date() };
+    const activity: Activity = { 
+      ...insertActivity, 
+      id,
+      userId: insertActivity.userId || null,
+      entityId: insertActivity.entityId || null,
+      metadata: insertActivity.metadata || {},
+      createdAt: new Date() 
+    };
     this.activities.set(id, activity);
     return activity;
   }
@@ -266,22 +324,33 @@ export class MemStorage implements IStorage {
     if (date) {
       const targetDate = new Date(date);
       records = records.filter(record => {
-        const recordDate = new Date(record.date);
+        const recordDate = record.date ? new Date(record.date) : new Date();
         return recordDate.toDateString() === targetDate.toDateString();
       });
     }
-    return records.sort((a, b) => b.date.getTime() - a.date.getTime());
+    return records.sort((a, b) => 
+      (b.date?.getTime() || 0) - (a.date?.getTime() || 0)
+    );
   }
 
   async getCurrentTimeTracking(workerId: number): Promise<TimeTracking | undefined> {
     return Array.from(this.timeTracking.values())
       .filter(record => record.workerId === workerId && record.clockOutTime === null)
-      .sort((a, b) => b.date.getTime() - a.date.getTime())[0];
+      .sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0))[0];
   }
 
   async createTimeTracking(insertTimeTracking: InsertTimeTracking): Promise<TimeTracking> {
     const id = this.currentId++;
-    const timeTracking: TimeTracking = { ...insertTimeTracking, id, date: new Date() };
+    const timeTracking: TimeTracking = { 
+      ...insertTimeTracking, 
+      id,
+      workerId: insertTimeTracking.workerId || null,
+      jobId: insertTimeTracking.jobId || null,
+      clockInTime: insertTimeTracking.clockInTime || null,
+      clockOutTime: insertTimeTracking.clockOutTime || null,
+      location: insertTimeTracking.location || {},
+      date: new Date() 
+    };
     this.timeTracking.set(id, timeTracking);
     return timeTracking;
   }

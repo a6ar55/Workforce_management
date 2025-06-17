@@ -90,7 +90,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User routes
   app.get('/api/users', requireAuth, requireRole(['admin']), async (req, res) => {
     const users = Array.from((storage as any).users.values());
-    res.json(users.map(({ password, ...user }) => user));
+    res.json(users.map((user: any) => {
+      const { password, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    }));
   });
 
   app.post('/api/users', requireAuth, requireRole(['admin']), async (req, res) => {
