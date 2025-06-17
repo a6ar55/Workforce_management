@@ -169,8 +169,11 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentId++;
     const user: User = { 
-      ...insertUser, 
       id, 
+      username: insertUser.username,
+      password: insertUser.password,
+      role: insertUser.role,
+      name: insertUser.name,
       email: insertUser.email || null,
       phone: insertUser.phone || null,
       createdAt: new Date() 
@@ -195,10 +198,10 @@ export class MemStorage implements IStorage {
   async createWorker(insertWorker: InsertWorker): Promise<Worker> {
     const id = this.currentId++;
     const worker: Worker = { 
-      ...insertWorker, 
       id,
-      status: insertWorker.status || 'available',
       userId: insertWorker.userId || null,
+      specialty: insertWorker.specialty,
+      status: insertWorker.status || 'available',
       location: insertWorker.location || null,
       completedJobs: insertWorker.completedJobs || 0,
       rating: insertWorker.rating || "0.00",
@@ -236,11 +239,13 @@ export class MemStorage implements IStorage {
   async createJob(insertJob: InsertJob): Promise<Job> {
     const id = this.currentId++;
     const job: Job = { 
-      ...insertJob, 
       id, 
+      type: insertJob.type,
       status: insertJob.status || 'pending',
-      priority: insertJob.priority || 'normal',
+      title: insertJob.title,
       description: insertJob.description || null,
+      priority: insertJob.priority || 'normal',
+      location: insertJob.location,
       assignedTo: insertJob.assignedTo || null,
       createdBy: insertJob.createdBy || null,
       customerName: insertJob.customerName || null,
@@ -280,8 +285,9 @@ export class MemStorage implements IStorage {
   async createJobReport(insertJobReport: InsertJobReport): Promise<JobReport> {
     const id = this.currentId++;
     const jobReport: JobReport = { 
-      ...insertJobReport, 
       id,
+      status: insertJobReport.status,
+      description: insertJobReport.description,
       workerId: insertJobReport.workerId || null,
       jobId: insertJobReport.jobId || null,
       timeSpent: insertJobReport.timeSpent || null,
@@ -307,8 +313,9 @@ export class MemStorage implements IStorage {
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
     const id = this.currentId++;
     const activity: Activity = { 
-      ...insertActivity, 
       id,
+      type: insertActivity.type,
+      description: insertActivity.description,
       userId: insertActivity.userId || null,
       entityId: insertActivity.entityId || null,
       metadata: insertActivity.metadata || {},
@@ -342,7 +349,6 @@ export class MemStorage implements IStorage {
   async createTimeTracking(insertTimeTracking: InsertTimeTracking): Promise<TimeTracking> {
     const id = this.currentId++;
     const timeTracking: TimeTracking = { 
-      ...insertTimeTracking, 
       id,
       workerId: insertTimeTracking.workerId || null,
       jobId: insertTimeTracking.jobId || null,
